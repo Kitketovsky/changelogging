@@ -1,0 +1,16 @@
+{
+  "name": "patch-diff",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "pnpm dlx npm-check-updates --packageFile ./input.json --format group > updates.txt"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "@types/node": "^24.3.0"
+  }
+}
