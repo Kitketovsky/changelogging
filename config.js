@@ -1,7 +1,7 @@
-const path = require("path");
+import path from 'path'
 
-module.exports = {
-  PACKAGE_JSON_PATH: path.join(__dirname, "input.json"),
-  UPDATES_TXT_PATH: path.join(__dirname, "updates.txt"),
-  OUTPUT_JSON_PATH: path.join(__dirname, "data.json"),
-};
+export const config = {
+  PACKAGE_JSON_PATH: path.join(process.cwd(), 'input.json'),
+  UPDATES_TXT_PATH: path.join(process.cwd(), 'updates.txt'),
+  OUTPUT_JSON_PATH: path.join(process.cwd(), 'data.json'),
+}

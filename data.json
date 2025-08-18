@@ -1,5 +1,6 @@
-{
-  "Patch": {
+[
+  {
+    "category": "Patch  ",
     "description": "Backwards-compatible bug fixes",
     "items": [
       {
@@ -81,7 +82,8 @@
       }
     ]
   },
-  "Minor": {
+  {
+    "category": "Minor  ",
     "description": "Backwards-compatible features",
     "items": [
       {
@@ -374,7 +376,8 @@
       }
     ]
   },
-  "Major": {
+  {
+    "category": "Major  ",
     "description": "Potentially breaking API changes",
     "items": [
       {
@@ -662,7 +665,13 @@
         "latestVersion": "4.0.17",
         "owner": "colinhacks",
         "repo": "zod"
-      },
+      }
+    ]
+  },
+  {
+    "category": "Major version zero  ",
+    "description": "Anything may change",
+    "items": [
       {
         "exists": true,
         "link": "https://registry.npmjs.org/@supabase/auth-helpers-nextjs",
@@ -728,4 +737,4 @@
       }
     ]
   }
-}
+]

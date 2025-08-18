@@ -1,24 +1,24 @@
 import fs from 'fs'
 import { exit } from 'process'
-import { UPDATES_TXT_PATH, OUTPUT_JSON_PATH } from './config.js'
+import { config } from './config.js'
 
 async function main() {
   const packagesUpdatesString = getPackagesUpdatesString()
   const packagesUpdatesParsedObject = await getPackageUpdatesParsedObject(packagesUpdatesString)
 
-  fs.writeFileSync(OUTPUT_JSON_PATH, JSON.stringify(packagesUpdatesParsedObject, null, 2))
+  fs.writeFileSync(config.OUTPUT_JSON_PATH, JSON.stringify(packagesUpdatesParsedObject, null, 2))
 
   exit(0)
 }
 
 function getPackagesUpdatesString() {
-  const isUpdatesFileExists = fs.existsSync(UPDATES_TXT_PATH)
+  const isUpdatesFileExists = fs.existsSync(config.UPDATES_TXT_PATH)
 
   if (!isUpdatesFileExists) {
-    throw new Error(`File '${UPDATES_TXT_PATH}' does not exist.`)
+    throw new Error(`File '${config.UPDATES_TXT_PATH}' does not exist.`)
   }
 
-  const updatesRaw = fs.readFileSync(UPDATES_TXT_PATH)
+  const updatesRaw = fs.readFileSync(config.UPDATES_TXT_PATH)
   const updatesString = updatesRaw.toString()
 
   return updatesString
@@ -90,17 +90,18 @@ async function getPackageUpdatesParsedObject(updatesString) {
     throw new Error(`No updates has been found!`)
   }
 
-  const packagesData = {}
+  const packagesData = []
 
   for (const batch of batches) {
     const [sectionTitleRaw, ...packages] = batch.split(/\n/g)
-    const [category, ...description] = sectionTitleRaw.split(/\s+/g)
+    const [category, description] = sectionTitleRaw
+      .split(/([A-Z][^A-Z]+)\s+([A-Z].+)/gm)
+      .filter(Boolean)
 
-    if (!packagesData[category]) {
-      packagesData[category] = {
-        description: description.join(' '),
-        items: [],
-      }
+    const categoryData = {
+      category,
+      description,
+      items: [],
     }
 
     for (const packageRaw of packages) {
@@ -108,7 +109,7 @@ async function getPackageUpdatesParsedObject(updatesString) {
       const registryPackageInfo = await getRegistryPackageInfo(packageAbout)
 
       if (!registryPackageInfo) {
-        packagesData[category].items.push({
+        categoryData.items.push({
           exists: false,
           ...packageAbout,
         })
@@ -116,12 +117,14 @@ async function getPackageUpdatesParsedObject(updatesString) {
         continue
       }
 
-      packagesData[category].items.push({
+      categoryData.items.push({
         exists: true,
         ...packageAbout,
         ...registryPackageInfo,
       })
     }
+
+    packagesData.push(categoryData)
   }
 
   return packagesData
