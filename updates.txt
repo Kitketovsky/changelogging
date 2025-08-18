@@ -1,0 +1,92 @@
+Using pnpm
+Checking /Users/kitketovsky/Personal/packages-changelog/input.json
+
+Patch   Backwards-compatible bug fixes
+ @radix-ui/react-collapsible  ^1.1.11  →  ^1.1.12
+ @radix-ui/react-icons         ^1.3.0  →   ^1.3.2
+ @types/formidable             ^3.4.1  →   ^3.4.5
+ @types/safe-compare           ^1.1.1  →   ^1.1.2
+ @types/ssh2-sftp-client       ^9.0.0  →   ^9.0.5
+ @types/winston-syslog         ^2.4.2  →   ^2.4.3
+ autoprefixer                 10.4.14  →  10.4.21
+ formidable                    ^3.5.1  →   ^3.5.4
+ winston-syslog                ^2.7.0  →   ^2.7.1
+
+Minor   Backwards-compatible features
+ @radix-ui/react-alert-dialog    ^1.0.4  →  ^1.1.15
+ @radix-ui/react-avatar          ^1.0.3  →  ^1.1.10
+ @radix-ui/react-checkbox        ^1.0.4  →   ^1.3.3
+ @radix-ui/react-dialog          ^1.0.4  →  ^1.1.15
+ @radix-ui/react-dropdown-menu   ^2.0.5  →  ^2.1.16
+ @radix-ui/react-label           ^2.0.2  →   ^2.1.7
+ @radix-ui/react-popover         ^1.0.7  →  ^1.1.15
+ @radix-ui/react-radio-group     ^1.1.3  →   ^1.3.8
+ @radix-ui/react-scroll-area     ^1.0.4  →  ^1.2.10
+ @radix-ui/react-slot            ^1.0.2  →   ^1.2.3
+ @radix-ui/react-tabs            ^1.0.4  →  ^1.1.13
+ @radix-ui/react-toast           ^1.1.5  →  ^1.2.15
+ @radix-ui/react-tooltip         ^1.0.7  →   ^1.2.8
+ @supabase/supabase-js          ^2.25.0  →  ^2.55.0
+ @tanstack/react-table          ^8.10.0  →  ^8.21.3
+ @uidotdev/usehooks              ^2.1.1  →   ^2.4.1
+ @upstash/qstash                 ^2.1.8  →   ^2.8.2
+ @upstash/redis                 ^1.29.0  →  ^1.35.3
+ bullmq                          ^5.7.2  →  ^5.58.0
+ clsx                            ^2.0.0  →   ^2.1.1
+ ioredis                         ^5.4.1  →   ^5.7.0
+ node-ssh                       ^13.1.0  →  ^13.2.1
+ postcss                         8.4.24  →    8.5.6
+ prettier                        ^3.0.2  →   ^3.6.2
+ react-hook-form                ^7.46.1  →  ^7.62.0
+ ssh2                           ^1.14.0  →  ^1.16.0
+ ts-jest                        ^29.1.1  →  ^29.4.1
+ tsx                             ^4.7.2  →  ^4.20.4
+ type-fest                       ^4.5.0  →  ^4.41.0
+ typescript                       5.1.3  →    5.9.2
+ winston                         ^3.9.0  →  ^3.17.0
+ winston-transport               ^4.5.0  →   ^4.9.0
+
+Major   Potentially breaking API changes
+ @hookform/resolvers       ^3.3.1  →     ^5.2.1
+ @radix-ui/react-select    ^1.2.2  →     ^2.2.6
+ @tanstack/react-query    ^4.35.3  →    ^5.85.3
+ @trpc/client            ^10.38.3  →    ^11.4.4
+ @trpc/next              ^10.38.3  →    ^11.4.4
+ @trpc/react-query       ^10.38.3  →    ^11.4.4
+ @trpc/server            ^10.38.3  →    ^11.4.4
+ @types/jest             ^29.5.14  →    ^30.0.0
+ @types/node               20.3.1  →     24.3.0
+ @types/react             18.2.12  →    19.1.10
+ @types/react-dom          18.2.5  →     19.1.7
+ browser-or-node           ^2.1.1  →     ^3.0.0
+ cloudflare                ^3.2.0  →     ^4.5.0
+ date-fns                 ^2.30.0  →     ^4.1.0
+ dotenv                   ^16.4.5  →    ^17.2.1
+ dotenv-cli                ^7.4.1  →    ^10.0.0
+ eslint                    8.42.0  →     9.33.0
+ eslint-config-next        13.4.5  →     15.4.6
+ expo-server-sdk           ^3.7.0  →     ^4.0.0
+ fast-xml-parser           ^4.3.2  →     ^5.2.5
+ framer-motion           ^10.16.0  →  ^12.23.12
+ next                      13.4.5  →     15.4.6
+ octokit                   ^3.2.0  →     ^5.0.3
+ react                     18.2.0  →     19.1.1
+ react-day-picker          ^8.9.1  →     ^9.9.0
+ react-dom                 18.2.0  →     19.1.1
+ sonner                    ^1.2.4  →     ^2.0.7
+ ssh2-sftp-client          ^9.1.0  →    ^12.0.1
+ supabase                 ^1.75.3  →    ^2.34.3
+ tailwind-merge           ^1.14.0  →     ^3.3.1
+ tailwindcss                3.3.2  →     4.1.12
+ zod                      ^3.22.2  →    ^4.0.17
+
+Major version zero   Anything may change
+ @supabase/auth-helpers-nextjs    ^0.7.2  →   ^0.10.0
+ @supabase/auth-helpers-react     ^0.4.0  →    ^0.5.0
+ @types/xml2js                   ^0.4.11  →   ^0.4.14
+ class-variance-authority         ^0.7.0  →    ^0.7.1
+ lucide-react                   ^0.279.0  →  ^0.540.0
+ next-themes                      ^0.2.1  →    ^0.4.6
+ prettier-plugin-tailwindcss      ^0.5.3  →   ^0.6.14
+
+Run ncu --packageFile ./input.json --format group -u to upgrade ./input.json

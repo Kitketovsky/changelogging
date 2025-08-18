@@ -15,7 +15,6 @@ const response = await fetch(
   {
     headers: {
       Accept: "application/json",
-      "User-Agent": "Kitketovsky",
     },
   }
 );
