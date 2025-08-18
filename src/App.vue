@@ -1,6 +1,7 @@
 <script setup>
-import data from './../data.json'
-import Panel from 'primevue/panel'
+import data from './../data.json';
+import Panel from 'primevue/panel';
+import PackagePanel from './components/PackagePanel.vue';
 </script>
 
 <template>
@@ -11,27 +12,15 @@ import Panel from 'primevue/panel'
       </h2>
 
       <div class="space-y-4">
-        <!-- TODO: on toggle show skeleton and fetch data from GitHub API -->
-        <Panel v-for="item in item.items" :key="item.name" toggleable :collapsed="true">
-          <template #header>
-            <div class="flex items-center gap-2">
-              <span>{{ item.name }}</span>
-              <span class="text-xs text-gray-200"
-                >{{ item.currentVersion }} → {{ item.latestVersion }}</span
-              >
-            </div>
-          </template>
-
-          <!-- Placeholder -->
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-            dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-            mollit anim id est laborum.
-          </p>
-        </Panel>
+        <PackagePanel
+          v-for="item in item.items"
+          :key="item.name"
+          :name="item.name"
+          :currentVersion="item.currentVersion"
+          :latestVersion="item.latestVersion"
+          :owner="item.owner"
+          :repo="item.repo"
+        />
       </div>
     </div>
   </div>

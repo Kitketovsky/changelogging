@@ -1,15 +1,19 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
 
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
+import { VueQueryPlugin } from '@tanstack/vue-query';
 
-import './globals.css'
+import PrimeVue from 'primevue/config';
+import Aura from '@primeuix/themes/aura';
 
-const app = createApp(App)
+import './globals.css';
 
-app.use(router)
+const app = createApp(App);
+
+app.use(VueQueryPlugin);
+
+app.use(router);
 
 app.use(PrimeVue, {
   theme: {
@@ -21,6 +25,6 @@ app.use(PrimeVue, {
     },
   },
   ripple: true,
-})
+});
 
-app.mount('#app')
+app.mount('#app');
