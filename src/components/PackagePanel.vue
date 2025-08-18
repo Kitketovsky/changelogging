@@ -1,8 +1,12 @@
 <script setup>
 import Panel from 'primevue/panel';
 import Skeleton from 'primevue/skeleton';
+import Button from 'primevue/button';
 
 import { useQuery } from '@tanstack/vue-query';
+
+import { createOpenAI } from '@ai-sdk/openai';
+import { streamText } from 'ai';
 
 import { ref, watch } from 'vue';
 
@@ -23,6 +27,9 @@ const props = defineProps({
     type: String,
   },
   repo: {
+    type: String,
+  },
+  openAIAPIKey: {
     type: String,
   },
 });
@@ -71,11 +78,35 @@ watch(isCollapsed, () => {
     refetch();
   }
 });
+
+const summary = ref('');
+
+const onSummarize = async () => {
+  summary.value = '';
+
+  try {
+    const openAIModel = createOpenAI({
+      apiKey: props.openAIAPIKey,
+    });
+
+    const { textStream } = streamText({
+      model: openAIModel('gpt-4o-mini'),
+      prompt: `I don't have time to read the changelog of the NPM package '${props.name}'. Summarize the changes between versions ${props.currentVersion} and ${props.latestVersion}. Pinpoint the most important changes.`,
+    });
+
+    for await (const textPart of textStream) {
+      summary.value += textPart;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 </script>
 
 <!-- TODO:
 - add toggle button for sorting commits by date
 - add summarize button that asks ChatGPT to summarize the changes between versions
+- render summary in markdown component
 -->
 
 <template>
@@ -85,6 +116,8 @@ watch(isCollapsed, () => {
         <span class="text-lg">{{ name }}</span>
         <span class="text-xs text-gray-200">{{ currentVersion }} → {{ latestVersion }}</span>
       </div>
+
+      <Button v-if="!isCollapsed" label="Summarize" @click="onSummarize" class="ml-auto" />
     </template>
 
     <Skeleton v-if="isPending" width="100%" height="150px" />
@@ -104,6 +137,11 @@ watch(isCollapsed, () => {
         }}</span>
         <a :href="commit.html_url" target="_blank">{{ commit.message }}</a>
       </div>
+    </div>
+
+    <div v-if="summary">
+      <h3 class="text-lg font-bold">Summary</h3>
+      <p>{{ summary }}</p>
     </div>
   </Panel>
 </template>
