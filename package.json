@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "pnpm dlx npm-check-updates --packageFile ./input.json --format group > updates.txt"
+    "prebuild": "pnpm dlx npm-check-updates --packageFile ./input.json --format group > updates.txt"
   },
   "keywords": [],
   "author": "",

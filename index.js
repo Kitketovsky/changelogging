@@ -1,58 +1,137 @@
 const fs = require("fs");
-const path = require("path");
 const { exit } = require("process");
+const { UPDATES_TXT_PATH, OUTPUT_JSON_PATH } = require("./config");
 
-const UPDATES_FILE = path.join(__dirname, "updates.txt");
+async function main() {
+  const packagesUpdatesString = getPackagesUpdatesString();
+  const packagesUpdatesParsedObject = await getPackageUpdatesParsedObject(
+    packagesUpdatesString
+  );
 
-const isUpdatesFileExists = fs.existsSync(UPDATES_FILE);
+  fs.writeFileSync(
+    OUTPUT_JSON_PATH,
+    JSON.stringify(packagesUpdatesParsedObject, null, 2)
+  );
 
-if (!isUpdatesFileExists) {
-  throw new Error(`File '${UPDATES_FILE} does not exist.'`);
+  exit(0);
 }
 
-const updatesRaw = fs.readFileSync(UPDATES_FILE);
-const updatesString = updatesRaw.toString();
+function getPackagesUpdatesString() {
+  const isUpdatesFileExists = fs.existsSync(UPDATES_TXT_PATH);
 
-// intro, ...patches, end
-const batches = updatesString.split(/\n\n/g).slice(1, -1);
+  if (!isUpdatesFileExists) {
+    throw new Error(`File '${UPDATES_TXT_PATH}' does not exist.`);
+  }
 
-// TODO: check ncu output if all packages are up-to-date
-if (batches.length === 0) {
-  throw new Error(`No updates has been found!`);
+  const updatesRaw = fs.readFileSync(UPDATES_TXT_PATH);
+  const updatesString = updatesRaw.toString();
+
+  return updatesString;
 }
 
-const packagesData = new Map();
+function parsePackage(packageRaw) {
+  const [name, currentVersion, _, latestVersion] = packageRaw
+    .trim()
+    .split(/\s+/);
 
-for (const batch of batches) {
-  const [sectionTitleRaw, ...packages] = batch.split(/\n/g);
-  const [category, ...description] = sectionTitleRaw.split(/\s+/);
+  return {
+    link: `https://registry.npmjs.org/${name}`,
+    name,
+    currentVersion: currentVersion.replace("^", ""),
+    latestVersion: latestVersion.replace("^", ""),
+  };
+}
 
-  for (const packageRaw of packages) {
-    const [name, currentVersion, _, latestVersion] = packageRaw
-      .trim()
-      .split(/\s+/);
+async function getRegistryPackageInfo(item) {
+  try {
+    const response = await fetch(item.link);
 
-    if (!packagesData.has(category)) {
-      packagesData.set(category, {
-        description: description.join(" "),
-        items: [],
-      });
+    if (!response.ok) {
+      console.error(
+        `Error fetching registry for '${item.name}'. Status: ${response.status}. Reason: ${response.statusText}`
+      );
+
+      return null;
     }
 
-    packagesData.get(category).items.push({
-      link: `https://registry.npmjs.org/${name}`,
-      name,
-      currentVersion,
-      latestVersion,
-    });
+    const data = await response.json();
+
+    if (!("repository" in data)) {
+      console.error(`Package ${item.name} does not have a repository.`);
+      return null;
+    }
+
+    if (data.repository.type !== "git") {
+      // FIXME: if it's here it has old format where version number is a key in object
+      console.error(
+        `Package ${item.name} is not a git package. Received '${data.repository.type}'.`
+      );
+      return null;
+    }
+
+    const [owner, repo] = data.repository.url
+      .replace("git+", "")
+      .replace(".git", "")
+      .split("/")
+      .slice(-2);
+
+    if (!owner) {
+      console.log("null owner", data.repository.url);
+    }
+
+    return {
+      owner,
+      repo,
+    };
+  } catch (error) {
+    console.error(`Failed to fetch '${item.name}' Reason: ${error.message}`);
+    return null;
   }
 }
 
-// TODO: get owner and repo names
+async function getPackageUpdatesParsedObject(updatesString) {
+  const batches = updatesString.split(/\n\n/g).slice(1, -1);
 
-// if response.type === 'git' => response.url (starts with git+https) => remove git+
-// response.versions keys => version, value => data
+  // TODO: check ncu output if all packages are up-to-date
+  if (batches.length === 0) {
+    throw new Error(`No updates has been found!`);
+  }
 
-// https://api.github.com/repos/eslint/eslint/compare/v8.42.0...v9.33.0
+  const packagesData = {};
 
-exit(0);
+  for (const batch of batches) {
+    const [sectionTitleRaw, ...packages] = batch.split(/\n/g);
+    const [category, ...description] = sectionTitleRaw.split(/\s+/g);
+
+    if (!packagesData[category]) {
+      packagesData[category] = {
+        description: description.join(" "),
+        items: [],
+      };
+    }
+
+    for (const packageRaw of packages) {
+      const packageAbout = parsePackage(packageRaw);
+      const registryPackageInfo = await getRegistryPackageInfo(packageAbout);
+
+      if (!registryPackageInfo) {
+        packagesData[category].items.push({
+          exists: false,
+          ...packageAbout,
+        });
+
+        continue;
+      }
+
+      packagesData[category].items.push({
+        exists: true,
+        ...packageAbout,
+        ...registryPackageInfo,
+      });
+    }
+  }
+
+  return packagesData;
+}
+
+main();
