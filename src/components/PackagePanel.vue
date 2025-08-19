@@ -28,9 +28,6 @@ const props = defineProps({
   repo: {
     type: String,
   },
-  openAIAPIKey: {
-    type: String,
-  },
 });
 
 const collapsed = ref(true);
@@ -69,7 +66,6 @@ const currentTab = ref('commits');
           :latest-version
           :owner
           :repo
-          :openAIAPIKey
         />
       </TabPanels>
     </Tabs>

@@ -1,30 +1,22 @@
 <script setup>
 import data from './../data.json';
-import { ref } from 'vue';
+import { provide, ref } from 'vue';
 
 import PackagePanel from './components/PackagePanel.vue';
-import Password from 'primevue/password';
+import SettingsOption from './components/SettingsOption.vue';
 
-const openAIAPIKey = ref('');
+const apikey = ref('');
+
+provide('apikey', apikey);
 </script>
 
 <template>
   <div class="container mx-auto px-4 py-20 flex flex-col gap-14">
+    <header class="flex items-center justify-end gap-2">
+      <SettingsOption />
+    </header>
+
     <h1 class="text-3xl font-bold">Packages Changelog</h1>
-
-    <div class="flex flex-col gap-2">
-      <h2 class="text-2xl font-bold">OpenAI API Key</h2>
-
-      <Password
-        name="openAIAPIKey"
-        v-model="openAIAPIKey"
-        :feedback="false"
-        autocomplete="off"
-        toggleMask
-        class="max-w-lg"
-        input-class="w-full"
-      />
-    </div>
 
     <div class="space-y-20">
       <div v-for="item in data" :key="item.category" class="space-y-2">
@@ -41,7 +33,6 @@ const openAIAPIKey = ref('');
             :latestVersion="item.latestVersion"
             :owner="item.owner"
             :repo="item.repo"
-            :openAIAPIKey="openAIAPIKey"
           />
         </div>
       </div>

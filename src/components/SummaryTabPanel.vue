@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import Skeleton from 'primevue/skeleton';
@@ -18,9 +18,6 @@ const props = defineProps({
   tabName: {
     type: String,
     required: true,
-  },
-  openAIAPIKey: {
-    type: String,
   },
   name: {
     type: String,
@@ -44,13 +41,15 @@ const props = defineProps({
 
 const summary = ref('');
 
-const { isTabOpened, openAIAPIKey } = toRefs(props);
+const { isTabOpened } = toRefs(props);
+
+const apikey = inject('apikey');
 
 const { isError, error, data, refetch } = useQuery({
   queryKey: ['summary', props.owner, props.repo, props.currentVersion, props.latestVersion],
   queryFn: async () => {
     const openAIModel = createOpenAI({
-      apiKey: openAIAPIKey.value,
+      apiKey: apikey.value,
     });
 
     let result = '';
@@ -72,7 +71,7 @@ const { isError, error, data, refetch } = useQuery({
 });
 
 watchEffect(() => {
-  if (isTabOpened.value && (!data.value || !summary.value) && openAIAPIKey.value) {
+  if (isTabOpened.value && (!data.value || !summary.value) && apikey.value) {
     refetch();
   }
 });
@@ -80,8 +79,9 @@ watchEffect(() => {
 
 <template>
   <TabPanel :value="props.tabName">
-    <div v-if="!openAIAPIKey" class="flex items-center justify-center text-center h-[150px]">
-      <p>OpenAI API key has not been provided!</p>
+    <div v-if="!apikey" class="flex items-center justify-center text-center h-[150px]">
+      <p>No OpenAI API key has been found!</p>
+      <p>Open Settings and provide one for AI summary</p>
     </div>
 
     <div v-else-if="isError" class="flex items-center justify-center text-center h-[150px]">
