@@ -4,7 +4,6 @@ import Tabs from 'primevue/tabs';
 import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
 
 import { ref } from 'vue';
 import CommitsTabPanel from './CommitsTabPanel.vue';
@@ -35,13 +34,8 @@ const props = defineProps({
 });
 
 const collapsed = ref(true);
+const currentTab = ref('commits');
 </script>
-
-<!-- TODO:
-- add toggle button for sorting commits by date
-- add summarize button that asks ChatGPT to summarize the changes between versions
-- render summary in markdown component
--->
 
 <template>
   <Panel toggleable v-model:collapsed="collapsed">
@@ -52,18 +46,31 @@ const collapsed = ref(true);
       </div>
     </template>
 
-    <Tabs value="0" v-if="!collapsed">
+    <Tabs v-model:value="currentTab" v-if="!collapsed">
       <TabList>
-        <Tab value="0">Commits</Tab>
-        <Tab value="1">Summary</Tab>
+        <Tab value="commits">Commits</Tab>
+        <Tab value="summary">Summary</Tab>
       </TabList>
       <TabPanels>
-        <TabPanel value="0">
-          <CommitsTabPanel :current-version :latest-version :owner :repo />
-        </TabPanel>
-        <TabPanel value="1">
-          <SummaryTabPanel :name :current-version :latest-version :owner :repo :openAIAPIKey />
-        </TabPanel>
+        <CommitsTabPanel
+          :is-tab-opened="currentTab === 'commits'"
+          tab-name="commits"
+          :current-version
+          :latest-version
+          :owner
+          :repo
+        />
+
+        <SummaryTabPanel
+          :is-tab-opened="currentTab === 'summary'"
+          tab-name="summary"
+          :name
+          :current-version
+          :latest-version
+          :owner
+          :repo
+          :openAIAPIKey
+        />
       </TabPanels>
     </Tabs>
   </Panel>

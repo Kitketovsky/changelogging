@@ -1,8 +1,20 @@
 <script setup>
 import Skeleton from 'primevue/skeleton';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import TabPanel from 'primevue/tabpanel';
 import { useQuery } from '@tanstack/vue-query';
+import { watchEffect, toRefs } from 'vue';
 
 const props = defineProps({
+  isTabOpened: {
+    type: Boolean,
+    required: true,
+  },
+  tabName: {
+    type: String,
+    required: true,
+  },
   owner: {
     type: String,
   },
@@ -19,7 +31,9 @@ const props = defineProps({
   },
 });
 
-const { isPending, isError, data, error } = useQuery({
+const { isTabOpened } = toRefs(props);
+
+const { isPending, isError, data, error, refetch } = useQuery({
   queryKey: ['package', props.owner, props.repo, props.currentVersion, props.latestVersion],
   queryFn: async () => {
     if (!props.owner || !props.repo) {
@@ -48,26 +62,58 @@ const { isPending, isError, data, error } = useQuery({
     };
   },
   retry: false,
+  enabled: false,
+});
+
+watchEffect(() => {
+  if (isTabOpened.value && !data.value) {
+    refetch();
+  }
 });
 </script>
 
 <template>
-  <Skeleton v-if="isPending" width="100%" height="150px" />
+  <TabPanel :value="props.tabName">
+    <Skeleton v-if="isPending" width="100%" height="150px" />
 
-  <div v-else-if="isError">
-    <p class="text-red-500">{{ error.message }}</p>
-  </div>
-
-  <div v-else class="space-y-6">
-    <div v-for="commit in data.commits" :key="commit.html_url" class="flex flex-col gap-2">
-      <span class="text-xs text-gray-200">{{
-        new Date(commit.date).toLocaleDateString('en-US', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })
-      }}</span>
-      <a :href="commit.html_url" target="_blank">{{ commit.message }}</a>
+    <div v-else-if="isError" class="flex items-center justify-center text-center h-[150px]">
+      <p class="text-red-500">{{ error.message }}</p>
     </div>
-  </div>
+
+    <DataTable
+      v-else
+      :value="data.commits"
+      paginator
+      scrollable
+      :rows="10"
+      :rowsPerPageOptions="[10, 20, 30]"
+      :paginatorTemplate="{
+        '640px': 'PrevPageLink CurrentPageReport NextPageLink',
+        '960px': 'FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink',
+        '1300px': 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink',
+        default:
+          'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink JumpToPageDropdown JumpToPageInput',
+      }"
+    >
+      <Column header="Date" field="date" sortable>
+        <template #body="slotProps">
+          <span class="block w-max">
+            {{
+              new Date(slotProps.data.date).toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })
+            }}
+          </span>
+        </template>
+      </Column>
+      <Column header="Message" field="message"></Column>
+      <Column header="Source" field="html_url">
+        <template #body="slotProps">
+          <a :href="slotProps.data.html_url" target="_blank">Link</a>
+        </template>
+      </Column>
+    </DataTable>
+  </TabPanel>
 </template>
