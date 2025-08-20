@@ -37,6 +37,13 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  repository_url: {
+    type: String,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
 });
 
 const summary = ref('');
@@ -79,13 +86,15 @@ watchEffect(() => {
 
 <template>
   <TabPanel :value="props.tabName">
-    <div v-if="!apikey" class="flex items-center justify-center text-center h-[150px]">
+    <div
+      v-if="!apikey"
+      class="flex flex-col gap-2 items-center justify-center text-center h-[150px]"
+    >
       <p>No OpenAI API key has been found!</p>
-      <p>Open Settings and provide one for AI summary</p>
+      <p>Open Settings and provide one for AI summary.</p>
     </div>
 
     <div v-else-if="isError" class="flex items-center justify-center text-center h-[150px]">
-      <!-- TODO: retry option via refetch function -->
       <p class="text-red-400">Error: {{ error.message }}</p>
     </div>
 

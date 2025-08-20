@@ -29,26 +29,39 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  repository_url: {
+    type: String,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
 });
 
 const { isTabOpened } = toRefs(props);
 
+const queryKey = ['package', props.owner, props.repo, props.currentVersion, props.latestVersion];
+
 const { isPending, isError, data, error, refetch } = useQuery({
-  queryKey: ['package', props.owner, props.repo, props.currentVersion, props.latestVersion],
-  queryFn: async () => {
+  queryKey,
+  queryFn: async ({ client }) => {
     if (!props.owner || !props.repo) {
       throw new Error(`Missing package owner or repo.`);
     }
 
-    const response = await fetch(
-      `https://api.github.com/repos/${props.owner}/${props.repo}/compare/v${props.currentVersion}...v${props.latestVersion}`,
-    );
+    const failures = client.getQueryState(queryKey).fetchFailureCount;
+
+    const currentVersion = failures === 0 ? props.currentVersion : `v${props.currentVersion}`;
+    const latestVersion = failures === 0 ? props.latestVersion : `v${props.latestVersion}`;
+
+    const link = `https://api.github.com/repos/${props.owner}/${props.repo}/compare/${currentVersion}...${latestVersion}`;
+    const response = await fetch(link);
 
     const data = await response.json();
 
     if (!response.ok) {
       throw new Error(
-        `Error fetching package data. Status: ${response.status}. Reason: ${data.message}.`,
+        `Repository version comparison failed. Status: ${response.status}. Reason: ${data.message}.`,
       );
     }
 
@@ -61,7 +74,7 @@ const { isPending, isError, data, error, refetch } = useQuery({
       })),
     };
   },
-  retry: false,
+  retry: 2,
   enabled: false,
 });
 
@@ -74,10 +87,19 @@ watchEffect(() => {
 
 <template>
   <TabPanel :value="props.tabName">
-    <Skeleton v-if="isPending" width="100%" height="150px" />
+    <Skeleton v-if="isPending" width="100%" height="350px" />
 
-    <div v-else-if="isError" class="flex items-center justify-center text-center h-[150px]">
-      <p class="text-red-500">{{ error.message }}</p>
+    <div
+      v-else-if="isError"
+      class="flex flex-col gap-2 items-center justify-center text-center h-[150px]"
+    >
+      <p>{{ error.message }}</p>
+      <p v-if="props.repository_url">
+        Try visiting repository:
+        <a class="underline" target="_blank" :href="props.repository_url">{{
+          props.repository_url
+        }}</a>
+      </p>
     </div>
 
     <DataTable
@@ -92,7 +114,7 @@ watchEffect(() => {
         '960px': 'FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink',
         '1300px': 'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink',
         default:
-          'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink JumpToPageDropdown JumpToPageInput',
+          'FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown',
       }"
     >
       <Column header="Date" field="date" sortable>

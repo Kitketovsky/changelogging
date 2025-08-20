@@ -28,6 +28,12 @@ const props = defineProps({
   repo: {
     type: String,
   },
+  repository_url: {
+    type: String,
+  },
+  type: {
+    type: String,
+  },
 });
 
 const collapsed = ref(true);
@@ -52,20 +58,13 @@ const currentTab = ref('commits');
         <CommitsTabPanel
           :is-tab-opened="currentTab === 'commits'"
           tab-name="commits"
-          :current-version
-          :latest-version
-          :owner
-          :repo
+          v-bind="props"
         />
 
         <SummaryTabPanel
           :is-tab-opened="currentTab === 'summary'"
           tab-name="summary"
-          :name
-          :current-version
-          :latest-version
-          :owner
-          :repo
+          v-bind="props"
         />
       </TabPanels>
     </Tabs>

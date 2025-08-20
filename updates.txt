@@ -1,5 +1,5 @@
 Using pnpm
-Checking /Users/kitketovsky/Personal/packages-changelog/input.json
+Checking /home/kitketovskyy/Code/patch-diff/input.json
 
 Patch   Backwards-compatible bug fixes
  @radix-ui/react-collapsible  ^1.1.11  →  ^1.1.12
@@ -49,7 +49,7 @@ Minor   Backwards-compatible features
 Major   Potentially breaking API changes
  @hookform/resolvers       ^3.3.1  →     ^5.2.1
  @radix-ui/react-select    ^1.2.2  →     ^2.2.6
- @tanstack/react-query    ^4.35.3  →    ^5.85.3
+ @tanstack/react-query    ^4.35.3  →    ^5.85.5
  @trpc/client            ^10.38.3  →    ^11.4.4
  @trpc/next              ^10.38.3  →    ^11.4.4
  @trpc/react-query       ^10.38.3  →    ^11.4.4
@@ -64,11 +64,11 @@ Major   Potentially breaking API changes
  dotenv                   ^16.4.5  →    ^17.2.1
  dotenv-cli                ^7.4.1  →    ^10.0.0
  eslint                    8.42.0  →     9.33.0
- eslint-config-next        13.4.5  →     15.4.6
+ eslint-config-next        13.4.5  →     15.5.0
  expo-server-sdk           ^3.7.0  →     ^4.0.0
  fast-xml-parser           ^4.3.2  →     ^5.2.5
  framer-motion           ^10.16.0  →  ^12.23.12
- next                      13.4.5  →     15.4.6
+ next                      13.4.5  →     15.5.0
  octokit                   ^3.2.0  →     ^5.0.3
  react                     18.2.0  →     19.1.1
  react-day-picker          ^8.9.1  →     ^9.9.0

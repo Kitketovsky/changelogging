@@ -25,15 +25,7 @@ provide('apikey', apikey);
         </h2>
 
         <div class="space-y-4">
-          <PackagePanel
-            v-for="item in item.items"
-            :key="item.name"
-            :name="item.name"
-            :currentVersion="item.currentVersion"
-            :latestVersion="item.latestVersion"
-            :owner="item.owner"
-            :repo="item.repo"
-          />
+          <PackagePanel v-for="item in item.items" :key="item.name" v-bind="item" />
         </div>
       </div>
     </div>
