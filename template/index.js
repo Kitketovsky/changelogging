@@ -1,6 +1,16 @@
 import fs from 'fs';
+import { dirname, join } from 'path';
 import { exit } from 'process';
-import { config } from './config.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const config = {
+  PACKAGE_JSON_PATH: join(__dirname, 'input.json'),
+  UPDATES_TXT_PATH: join(__dirname, 'updates.txt'),
+  OUTPUT_JSON_PATH: join(__dirname, 'data.json'),
+};
 
 async function main() {
   const packagesUpdatesString = getPackagesUpdatesString();
@@ -85,7 +95,6 @@ async function getRegistryPackageInfo(item) {
 async function getPackageUpdatesParsedObject(updatesString) {
   const batches = updatesString.split(/\n\n/g).slice(1, -1);
 
-  // TODO: check ncu output if all packages are up-to-date
   if (batches.length === 0) {
     throw new Error(`No updates has been found!`);
   }

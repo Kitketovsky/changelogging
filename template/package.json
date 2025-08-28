@@ -13,7 +13,7 @@
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
     "extract-data": "node index.js",
-    "updates": "pnpm dlx npm-check-updates --packageFile ./input.json --format group > updates.txt && node index.js"
+    "updates": "pnpm dlx npm-check-updates --packageFile ./../package.json --format group > updates.txt && node index.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.15",

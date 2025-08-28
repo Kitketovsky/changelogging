@@ -1,19 +1,24 @@
 #!/usr/bin/env node
+
 import { Command } from "commander";
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import fs from "fs";
 import chalk from "chalk";
-import ora, { spinners } from "ora";
-import fsExtra from "fs-extra";
+import ora from "ora";
+import fs from "fs-extra";
+
+import { detect } from "package-manager-detector/detect";
+import { resolveCommand } from "package-manager-detector/commands";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const program = new Command();
+function normalizeCommand({ command, args }) {
+  return `${command} ${args.join(" ")}`.trim();
+}
 
-// !WARNING: it all works if user has pnpm, we need to check for other package managers
+const program = new Command();
 
 program
   .name("changelogging")
@@ -24,18 +29,10 @@ program
   .command("create")
   .description("Create a new changelogging project")
   .action(async () => {
-    const targetDir = join(process.cwd(), ".changelogging");
-    const templateDir = join(__dirname, "..", "template");
     const rootDir = process.cwd();
+    const targetDir = join(rootDir, ".changelogging");
+    const templateDir = join(__dirname, "..", "template");
     const rootPackageJsonFile = join(rootDir, "package.json");
-
-    // Check if package.json exists
-    if (!fs.existsSync(rootPackageJsonFile)) {
-      console.error(
-        chalk.red(`❌ No package.json file found in the root directory.`)
-      );
-      process.exit(1);
-    }
 
     // Check if .changelogging folder already exists
     if (fs.existsSync(targetDir)) {
@@ -47,14 +44,20 @@ program
 
     const spinner = ora("Creating changelogging project...").start();
 
+    const pm = (await detect()) || { agent: "npm", name: "npm" };
+
     try {
       // Copy template files
-      await fsExtra.copy(templateDir, targetDir);
-      spinner.succeed("Project files copied");
+      await fs.copy(templateDir, targetDir);
+      spinner.succeed(`Template from ${templateDir} copied to ${targetDir}`);
 
       // Install dependencies
       spinner.start("Installing dependencies...");
-      execSync(`cd ${targetDir} && pnpm install`, { stdio: "pipe" });
+      const installDepsCommandRaw = resolveCommand(pm.agent, "install");
+      execSync(normalizeCommand(installDepsCommandRaw), {
+        stdio: "pipe",
+        cwd: targetDir,
+      });
       spinner.succeed("Dependencies installed");
 
       // Read and update root package.json
@@ -65,8 +68,8 @@ program
         packageJson.scripts = {};
       }
 
-      packageJson.scripts["changelogging"] = "changelogging dev";
-      packageJson.scripts["build-changelogging"] = "changelogging build";
+      packageJson.scripts["changelogging:dev"] = "changelogging dev";
+      packageJson.scripts["changelogging:build"] = "changelogging build";
 
       fs.writeFileSync(
         rootPackageJsonFile,
@@ -75,14 +78,23 @@ program
 
       console.log(
         chalk.green(
-          `✅ Changelogging project created successfully in ${targetDir}`
+          `✅ Changelogging project created successfully in '${targetDir}'`
         )
       );
+
+      const devCommand = normalizeCommand(
+        resolveCommand(pm.agent, "run", "changelogging:dev")
+      );
+
+      const buildCommand = normalizeCommand(
+        resolveCommand(pm.agent, "run", "changelogging:build")
+      );
+
       console.log(chalk.blue(`📝 Added scripts to package.json:`));
-      console.log(chalk.cyan(`   npm run changelogging:dev`));
-      console.log(chalk.cyan(`   npm run changelogging:build`));
-      console.log(chalk.yellow(`\n🚀 To start development:`));
-      console.log(chalk.yellow(`   cd .changelogging && pnpm dev`));
+      console.log(chalk.cyan(`   ${devCommand}`));
+      console.log(chalk.cyan(`   ${buildCommand}`));
+      console.log(chalk.yellow(`\n🚀 To view changelogs UI:`));
+      console.log(chalk.yellow(`   ${devCommand}`));
     } catch (error) {
       spinner.fail("Failed to create project");
       console.error(chalk.red(`❌ Error: ${error.message}`));
@@ -90,128 +102,40 @@ program
     }
   });
 
-  function generatePackagesChangelogInformation(packageJsonFilePath) {
-    const spinner = ora('Parsing package.json file for outdated packages...').start();
-
-     try {
-       if (!packageJsonFilePath) {
-         packageJsonFilePath = join(process.cwd(), 'package.json');
-       }
-
-       if (!fs.existsSync(packageJsonFilePath)) {
-        throw new Error(`❌ Provided invalid package.json file path`)
-       }
-
-       execSync(`pnpm dlx npm-check-updates --packageFile ${packageJsonFilePath} --format group > ./.changelogging/updates.txt`)
-       spinner.succeed();
-
-       spinner.text('Fetching NPM registry about outdated packages...')
-       execSync(`node ./changelogging/index.js`);
-       spinner.succeed()
-     } catch (error) {
-      spinner.fail(error.message)
-     } finally {
-      spinner.stop();
-     }
-  }
-
 program
   .command("dev")
   .description("Start the changelogging development server")
-  .action(() => {
-    // Look for changelogging project in current directory or parent
-    let changeloggingDir = null;
-    let currentDir = process.cwd();
+  // .option("-p, --path <path>", "package.json file path", "./package.json")
+  .action(async (args) => {
+    const EXPECTED_CHANGELOGGING_PATH = join(process.cwd(), ".changelogging");
 
-    // First check if we're in a changelogging project
-    if (
-      fs.existsSync(join(currentDir, "package.json")) &&
-      fs.existsSync(join(currentDir, "vite.config.js"))
-    ) {
-      changeloggingDir = currentDir;
-    }
-    // Then check for .changelogging folder
-    else if (fs.existsSync(join(currentDir, ".changelogging"))) {
-      changeloggingDir = join(currentDir, ".changelogging");
-    }
-    // Finally check parent directory for .changelogging
-    else if (fs.existsSync(join(currentDir, "..", ".changelogging"))) {
-      changeloggingDir = join(currentDir, "..", ".changelogging");
-    }
-
-    if (!changeloggingDir) {
-      console.error(chalk.red(`❌ No changelogging project found.`));
+    if (!fs.existsSync(EXPECTED_CHANGELOGGING_PATH)) {
       console.error(
-        chalk.yellow(
-          `   Make sure you're in a changelogging project directory or run 'changelogging create' first.`
+        chalk.red(
+          `❌ No .changelogging folder has been found in '${EXPECTED_CHANGELOGGING_PATH}'`
         )
       );
+
       process.exit(1);
     }
 
-    console.log(
-      chalk.blue(
-        `🚀 Starting changelogging development server in ${changeloggingDir}...`
-      )
+    const pm = (await detect()) || { agent: "npm", name: "npm" };
+
+    console.log(chalk.blue(`🚀 Starting changelogging...`));
+
+    const devCommand = normalizeCommand(
+      resolveCommand(pm.agent, "run", ["dev"])
     );
 
     try {
-      // Change to changelogging directory and start dev server
-      process.chdir(changeloggingDir);
-      execSync("pnpm dev", { stdio: "inherit" });
+      execSync(devCommand, {
+        cwd: join(process.cwd(), ".changelogging"),
+        stdio: "inherit",
+      });
     } catch (error) {
       console.error(
-        chalk.red(`❌ Error starting dev server: ${error.message}`)
+        chalk.red(`❌ Error starting Changelogging UI: ${error.message}`)
       );
-      process.exit(1);
-    }
-  });
-
-program
-  .command("build")
-  .description("Build the changelogging project for production")
-  .action(() => {
-    // Look for changelogging project in current directory or parent
-    let changeloggingDir = null;
-    let currentDir = process.cwd();
-
-    // First check if we're in a changelogging project
-    if (
-      fs.existsSync(join(currentDir, "package.json")) &&
-      fs.existsSync(join(currentDir, "vite.config.js"))
-    ) {
-      changeloggingDir = currentDir;
-    }
-    // Then check for .changelogging folder
-    else if (fs.existsSync(join(currentDir, ".changelogging"))) {
-      changeloggingDir = join(currentDir, ".changelogging");
-    }
-    // Finally check parent directory for .changelogging
-    else if (fs.existsSync(join(currentDir, "..", ".changelogging"))) {
-      changeloggingDir = join(currentDir, "..", ".changelogging");
-    }
-
-    if (!changeloggingDir) {
-      console.error(chalk.red(`❌ No changelogging project found.`));
-      console.error(
-        chalk.yellow(
-          `   Make sure you're in a changelogging project directory or run 'changelogging create' first.`
-        )
-      );
-      process.exit(1);
-    }
-
-    console.log(
-      chalk.blue(`🔨 Building changelogging project in ${changeloggingDir}...`)
-    );
-
-    try {
-      // Change to changelogging directory and build
-      process.chdir(changeloggingDir);
-      execSync("pnpm build", { stdio: "inherit" });
-      console.log(chalk.green("✅ Build completed successfully!"));
-    } catch (error) {
-      console.error(chalk.red(`❌ Build failed: ${error.message}`));
       process.exit(1);
     }
   });
