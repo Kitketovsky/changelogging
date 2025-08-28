@@ -94,11 +94,9 @@ watchEffect(() => {
       class="flex flex-col gap-2 items-center justify-center text-center h-[150px]"
     >
       <p>{{ error.message }}</p>
-      <p v-if="props.repository_url">
+      <p v-if="repository_url">
         Try visiting repository:
-        <a class="underline" target="_blank" :href="props.repository_url">{{
-          props.repository_url
-        }}</a>
+        <a class="underline" target="_blank" :href="repository_url">{{ props.repository_url }}</a>
       </p>
     </div>
 

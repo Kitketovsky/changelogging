@@ -1,124 +1,63 @@
-import fs from 'fs';
-import { exit } from 'process';
-import { config } from './config.js';
+#!/usr/bin/env node
 
-async function main() {
-  const packagesUpdatesString = getPackagesUpdatesString();
-  const packagesUpdatesParsedObject = await getPackageUpdatesParsedObject(packagesUpdatesString);
+/**
+ * Changelogging - A Vue-based changelog management tool for npm packages
+ *
+ * This library provides:
+ * - CLI commands for creating, developing, and building changelog projects
+ * - Vue-based UI for managing package information and changelogs
+ * - Automatic package.json data extraction
+ * - Package update tracking
+ */
 
-  fs.writeFileSync(config.OUTPUT_JSON_PATH, JSON.stringify(packagesUpdatesParsedObject, null, 2));
+export { default as Changelogging } from "./template/src/App.vue";
 
-  exit(0);
-}
-
-function getPackagesUpdatesString() {
-  const isUpdatesFileExists = fs.existsSync(config.UPDATES_TXT_PATH);
-
-  if (!isUpdatesFileExists) {
-    throw new Error(`File '${config.UPDATES_TXT_PATH}' does not exist.`);
-  }
-
-  const updatesRaw = fs.readFileSync(config.UPDATES_TXT_PATH);
-  const updatesString = updatesRaw.toString();
-
-  return updatesString;
-}
-
-function parsePackage(packageRaw) {
-  const [name, currentVersion, _, latestVersion] = packageRaw.trim().split(/\s+/);
-
-  return {
-    link: `https://registry.npmjs.org/${name}`,
-    name,
-    currentVersion: currentVersion.replace('^', ''),
-    latestVersion: latestVersion.replace('^', ''),
-  };
-}
-
-async function getRegistryPackageInfo(item) {
-  try {
-    const response = await fetch(item.link);
-
-    if (!response.ok) {
-      console.error(
-        `Error fetching registry for '${item.name}'. Status: ${response.status}. Reason: ${response.statusText}`,
-      );
-
+// Export utility functions
+export const utils = {
+  /**
+   * Extract package data from a package.json file
+   * @param {string} packageJsonPath - Path to package.json
+   * @returns {Object} Parsed package data
+   */
+  extractPackageData: (packageJsonPath) => {
+    try {
+      const fs = require("fs");
+      const packageContent = fs.readFileSync(packageJsonPath, "utf8");
+      return JSON.parse(packageContent);
+    } catch (error) {
+      console.error("Error reading package.json:", error);
       return null;
     }
+  },
 
-    const data = await response.json();
+  /**
+   * Generate changelog entry
+   * @param {string} version - Version number
+   * @param {Array} changes - Array of change descriptions
+   * @returns {string} Formatted changelog entry
+   */
+  generateChangelogEntry: (version, changes) => {
+    const date = new Date().toISOString().split("T")[0];
+    let entry = `## [${version}] - ${date}\n\n`;
 
-    if (!data.repository) {
-      console.warn(`Package '${item.name}' does not have its own public repository.`);
-      return null;
-    }
+    changes.forEach((change) => {
+      entry += `- ${change}\n`;
+    });
 
-    const rawRepositoryName =
-      typeof data.repository === 'object' && 'url' in data.repository
-        ? new URL(data.repository.url).pathname
-        : data.repository;
+    entry += "\n";
+    return entry;
+  },
+};
 
-    const [owner, repo] = rawRepositoryName
-      .replace('git+', '')
-      .replace('.git', '')
-      .split('/')
-      .filter(Boolean);
+// CLI commands
+export const commands = {
+  create: "changelogging create",
+  dev: "changelogging dev",
+  build: "changelogging build",
+};
 
-    const type =
-      typeof data.repository === 'string' || 'directory' in data.repository
-        ? 'package'
-        : 'repository';
-
-    return {
-      type,
-      repository_url: `https://github.com/${owner}/${repo}`,
-      owner,
-      repo,
-    };
-  } catch (error) {
-    console.error(`Failed to fetch '${item.name}' Reason: ${error.message}`);
-    return null;
-  }
-}
-
-async function getPackageUpdatesParsedObject(updatesString) {
-  const batches = updatesString.split(/\n\n/g).slice(1, -1);
-
-  // TODO: check ncu output if all packages are up-to-date
-  if (batches.length === 0) {
-    throw new Error(`No updates has been found!`);
-  }
-
-  const packagesData = [];
-
-  for (const batch of batches) {
-    const [sectionTitleRaw, ...packages] = batch.split(/\n/g);
-    const [category, description] = sectionTitleRaw
-      .split(/([A-Z][^A-Z]+)\s+([A-Z].+)/gm)
-      .filter(Boolean);
-
-    const categoryData = {
-      category: category.trim(),
-      description: description.trim(),
-      items: [],
-    };
-
-    for (const packageRaw of packages) {
-      const packageAbout = parsePackage(packageRaw);
-      const registryPackageInfo = await getRegistryPackageInfo(packageAbout);
-
-      categoryData.items.push({
-        exists: !!registryPackageInfo,
-        ...packageAbout,
-        ...(registryPackageInfo || {}),
-      });
-    }
-
-    packagesData.push(categoryData);
-  }
-
-  return packagesData;
-}
-
-main();
+export default {
+  utils,
+  commands,
+  version: "1.0.0",
+};
