@@ -18,33 +18,51 @@ function normalizeCommand({ command, args }) {
   return `${command} ${args.join(" ")}`.trim();
 }
 
+const CONFIG = {
+  scaffoldFolder: ".changelogging",
+  templateFolder: "template",
+  packageJson: "package.json",
+  defaultPackageManager: "npm",
+  execDevCommand: "changelogging:dev",
+  devCommand: "changelogging dev",
+  execBuildCommand: "changelogging:build",
+  buildCommand: "changelogging build",
+};
+
 const program = new Command();
 
 program
   .name("changelogging")
-  .description("A Vue-based changelog management tool for npm packages")
+  .description(
+    "A local-first Vue-based package.json report tool for outdated dependencies"
+  )
   .version("1.0.0");
 
 program
   .command("create")
-  .description("Create a new changelogging project")
+  .description("Scaffold .changelogging project")
   .action(async () => {
     const rootDir = process.cwd();
-    const targetDir = join(rootDir, ".changelogging");
-    const templateDir = join(__dirname, "..", "template");
-    const rootPackageJsonFile = join(rootDir, "package.json");
+    const targetDir = join(rootDir, CONFIG.scaffoldFolder);
+    const templateDir = join(__dirname, "..", CONFIG.templateFolder);
+    const rootPackageJsonFile = join(rootDir, CONFIG.packageJson);
 
     // Check if .changelogging folder already exists
     if (fs.existsSync(targetDir)) {
       console.error(
-        chalk.red(`❌ Folder .changelogging already exists. Remove it first.`)
+        chalk.red(
+          `❌ Folder ${CONFIG.scaffoldFolder} already exists. Remove it first.`
+        )
       );
       process.exit(1);
     }
 
     const spinner = ora("Creating changelogging project...").start();
 
-    const pm = (await detect()) || { agent: "npm", name: "npm" };
+    const pm = (await detect()) || {
+      agent: CONFIG.defaultPackageManager,
+      name: CONFIG.defaultPackageManager,
+    };
 
     try {
       // Copy template files
@@ -68,8 +86,8 @@ program
         packageJson.scripts = {};
       }
 
-      packageJson.scripts["changelogging:dev"] = "changelogging dev";
-      packageJson.scripts["changelogging:build"] = "changelogging build";
+      packageJson.scripts[CONFIG.execDevCommand] = CONFIG.devCommand;
+      packageJson.scripts[CONFIG.execBuildCommand] = CONFIG.buildCommand;
 
       fs.writeFileSync(
         rootPackageJsonFile,
@@ -82,19 +100,19 @@ program
         )
       );
 
-      const devCommand = normalizeCommand(
-        resolveCommand(pm.agent, "run", "changelogging:dev")
+      const normalizedDevCommand = normalizeCommand(
+        resolveCommand(pm.agent, "run", CONFIG.execDevCommand)
       );
 
-      const buildCommand = normalizeCommand(
-        resolveCommand(pm.agent, "run", "changelogging:build")
+      const normalizedBuildCommand = normalizeCommand(
+        resolveCommand(pm.agent, "run", CONFIG.execBuildCommand)
       );
 
       console.log(chalk.blue(`📝 Added scripts to package.json:`));
-      console.log(chalk.cyan(`   ${devCommand}`));
-      console.log(chalk.cyan(`   ${buildCommand}`));
+      console.log(chalk.cyan(`   ${normalizedDevCommand}`));
+      console.log(chalk.cyan(`   ${normalizedBuildCommand}`));
       console.log(chalk.yellow(`\n🚀 To view changelogs UI:`));
-      console.log(chalk.yellow(`   ${devCommand}`));
+      console.log(chalk.yellow(`   ${normalizedDevCommand}`));
     } catch (error) {
       spinner.fail("Failed to create project");
       console.error(chalk.red(`❌ Error: ${error.message}`));
@@ -107,29 +125,35 @@ program
   .description("Start the changelogging development server")
   // .option("-p, --path <path>", "package.json file path", "./package.json")
   .action(async (args) => {
-    const EXPECTED_CHANGELOGGING_PATH = join(process.cwd(), ".changelogging");
+    const EXPECTED_CHANGELOGGING_PATH = join(
+      process.cwd(),
+      CONFIG.scaffoldFolder
+    );
 
     if (!fs.existsSync(EXPECTED_CHANGELOGGING_PATH)) {
       console.error(
         chalk.red(
-          `❌ No .changelogging folder has been found in '${EXPECTED_CHANGELOGGING_PATH}'`
+          `❌ No ${CONFIG.scaffoldFolder} folder has been found in '${EXPECTED_CHANGELOGGING_PATH}'`
         )
       );
 
       process.exit(1);
     }
 
-    const pm = (await detect()) || { agent: "npm", name: "npm" };
+    const pm = (await detect()) || {
+      agent: CONFIG.defaultPackageManager,
+      name: CONFIG.defaultPackageManager,
+    };
 
     console.log(chalk.blue(`🚀 Starting changelogging...`));
 
-    const devCommand = normalizeCommand(
+    const normalizedDevCommand = normalizeCommand(
       resolveCommand(pm.agent, "run", ["dev"])
     );
 
     try {
-      execSync(devCommand, {
-        cwd: join(process.cwd(), ".changelogging"),
+      execSync(normalizedDevCommand, {
+        cwd: EXPECTED_CHANGELOGGING_PATH,
         stdio: "inherit",
       });
     } catch (error) {
