@@ -1,15 +1,24 @@
 # Changelogging
 
-A Vue-based changelog management tool for npm packages that automatically extracts package information and provides a beautiful UI for managing changelogs.
+## About
 
-## Features
+Vue-based interface to list all outdated packages in root project `package.json` file, show
+commits diff / history between their versions or ask AI for a report of the changes
+with code examples.
 
-- 🚀 **Quick Setup**: Create a changelog project with a single command
-- 📦 **Auto Data Extraction**: Automatically reads from your root `package.json`
-- 🎨 **Beautiful Vue UI**: Modern, responsive interface built with Vue 3
-- 🔧 **CLI Commands**: Easy-to-use commands for development and building
-- 📝 **Package Updates**: Track and manage package updates
-- 🎯 **Changelog Management**: Create and manage changelog entries
+## Why
+
+I have a couple of years old project and before I decide to update packages, first of all I need to know what changes
+I need to work with. I found such tools like `npm-check-updates` to get outdated dependencies and their current version,
+but to see what actually is different and if there are any breaking changes, I need to go to each package's documentation.
+
+To speed up the process, I built that library to traverse each package commit history and ability to use ChatGPT to make
+it`s own summary.
+
+## Status
+
+- I'm more than certain that there are tools or libraries that solve mentioned problem far better than this library.
+- It's far from production ready and it's my first time building a library. Don't expect much at all.
 
 ## Installation
 
@@ -36,7 +45,7 @@ This will:
 
 - Create a `.changelogging` folder in your project
 - Copy the Vue template with all dependencies
-- Install dependencies using pnpm
+- Install dependencies using your package manager
 - Add convenience scripts to your root `package.json`
 
 ### 2. Start development server
@@ -57,11 +66,12 @@ npm run changelogging:build
 
 ## CLI Commands
 
-| Command                | Description                        |
+present
+| Command | Description |
 | ---------------------- | ---------------------------------- |
 | `changelogging create` | Create a new changelogging project |
-| `changelogging dev`    | Start the development server       |
-| `changelogging build`  | Build the project for production   |
+| `changelogging dev` | Start the development server |
+| `changelogging build` | Build the project for production |
 
 ## Project Structure
 
@@ -77,66 +87,14 @@ your-project/
 │   ├── index.js             # Data extraction script
 │   └── data.json            # Generated package data
 ├── package.json             # Your root package.json
-└── CHANGELOG.md            # Your changelog file
 ```
 
 ## Data Extraction
 
-The tool automatically extracts the following information from your root `package.json`:
-
-- Package name, version, and description
-- Author and license information
-- Repository and homepage URLs
-- Dependencies and devDependencies
-- Scripts and engine requirements
-- Package manager information
-
-## Customization
-
-### Adding Custom Data
-
-You can modify the `template/index.js` file to extract additional data or modify the extraction logic.
-
-### Styling
-
-The Vue app uses Tailwind CSS and PrimeVue components. You can customize the styling by modifying the CSS files in the template.
-
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- pnpm (recommended) or npm
-
-### Local Development
-
-1. Clone the repository
-2. Install dependencies: `pnpm install`
-3. Build the library: `pnpm run build`
-4. Link locally: `pnpm link --global`
-5. Test in a project: `changelogging create`
-
-## Publishing
-
-```bash
-# Build the library
-pnpm run build
-
-# Publish to npm
-npm publish
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-ISC
+- Using `npm-check-updates` library, get list of outdated packages and their latest versions
+- From NPM registry get Github information about each of the packages
+- Get commit history using Github API `compare` endpoint
+- Package gathered information in unifed format and present it on Vue frontend
 
 ## Support
 
